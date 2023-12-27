@@ -25,14 +25,19 @@ public class Controller {
     private Circle[] arr;
     // 所有球的颜色
     private final String[] colorArr = {"#00c0ff", "#fff900", "#00ff00", "#ff0000"};
+    private final HashMap<String, String> colorMap = new HashMap<>();
+    
+    {
+        colorMap.put("#00c0ff", "blue");
+        colorMap.put("#fff900", "yellow");
+        colorMap.put("#00ff00", "green");
+        colorMap.put("#ff0000", "red");
+    }
     
     // 所有轨道初始数据
     @GetMapping("/initTracks")
     public Object[] initTracks() {
         computeDiffAngleOnSameTrack();
-        System.out.println(Arrays.toString(diffAngleOnSameTrack));
-//        computeDiffAngleOnDifferentTrack();
-//        System.out.println(Arrays.toString(diffAngleOnDifferentTrack));
         return new Object[]{initLine, circleTrackArr};
     }
     
@@ -40,7 +45,7 @@ public class Controller {
     @GetMapping("/initCircles")
     public Circle[] initCircles() {
         // 生成轨道上的圆
-        arr = new Circle[10];
+        arr = new Circle[3];
         for (int i = 0; i < arr.length; i++) {
             Circle circle = new Circle(400, i * -80, colorArr[(int) (Math.random() * 4)]);
             arr[i] = circle;
@@ -66,10 +71,24 @@ public class Controller {
         // 前端动画改变了数组内元素
         arr = hit.getCircleArr();
         
+        // 是往前插入还是往后
+        boolean isInsertBefore = true;
+        // 数学结算,计算从轨道端点开始,到射击圆心的夹角
+        double absY = Math.abs(shotCircle.getY() - circleTrackArr[trackCircle.getIndex() - 1].getY());
+        double absX = Math.abs(shotCircle.getX() - circleTrackArr[trackCircle.getIndex() - 1].getX());
+        double atan = Math.atan(absY / absX);
+        // 如果大于90
+        if (shotCircle.getX() >= circleTrackArr[trackCircle.getIndex() - 1].getX()) {
+            atan = 2 * Math.PI - atan;
+        }
+        // 如果射击圆与端点的夹角大于轨道上的圆的夹角,则往后插入
+        if (atan < trackCircle.getAngle() - Math.PI) {
+            isInsertBefore = false;
+        }
+        
         // 如果射击的球和轨道上的球颜色不同,直接插入
         if (!trackCircle.getColor().equals(shotCircle.getColor())) {
-//            System.out.println("不同颜色");
-            insert(trackCircle, shotCircle, trackCircle.getIndex(), index);
+            insert(trackCircle, shotCircle, trackCircle.getIndex(), index, isInsertBefore);
             return arr;
         }
         
@@ -89,7 +108,7 @@ public class Controller {
             arr = splice(arr, index - left + 1, left + right - 1);
         } else {
             // 插入
-            insert(trackCircle, shotCircle, trackCircle.getIndex(), index);
+            insert(trackCircle, shotCircle, trackCircle.getIndex(), index, isInsertBefore);
         }
         return arr;
     }
@@ -99,58 +118,68 @@ public class Controller {
      * @param shotCircle       射击的圆
      * @param indexInTrackArr  被碰撞的圆在第几个轨道上
      * @param indexInCircleArr 被碰撞的圆在所有球数组中的索引
+     * @param isInsertBefore   是往前插入还是往后
      */
-    public void insert(Circle trackCircle, Circle shotCircle, int indexInTrackArr, int indexInCircleArr) {
-        double circleCenterX = circleTrackArr[indexInTrackArr - 1].getX();
-        double circleCenterY = circleTrackArr[indexInTrackArr - 1].getY();
+    public void insert(Circle trackCircle, Circle shotCircle, int indexInTrackArr, int indexInCircleArr, boolean isInsertBefore) {
         // 计算被碰撞的球和其下一个球之间夹角
         double diffAngle = diffAngleOnSameTrack[indexInTrackArr - 1];
-        double alreadyAngle = trackCircle.getAngle() - Math.PI;
         
-        // 根据三角函数算出x,y, 默认假设下一次不会进入下一个轨道
-        double cosAngle = alreadyAngle + diffAngle;
-        
-        // 如果会进入下一个轨道
-        if (trackCircle.getAngle() + diffAngle >= Math.PI * 2) {
-            System.out.println("会进入下一个轨道");
-            double checkAngle = calculateDiffAngle(trackCircle, circleTrackArr[trackCircle.getIndex() == 3 ? 2 : trackCircle.getIndex()]);
-            shotCircle.setIndex(trackCircle.getIndex() + 1);
-            shotCircle.setAngle(diffAngleOnSameTrack[trackCircle.getIndex() == 3 ? 2 : trackCircle.getIndex()] - checkAngle + Math.PI);
-            // 用锐角,三角函数算坐标
-            cosAngle = shotCircle.getAngle() - Math.PI;
-        } else {
-            // 不会进入下一个轨道
-            shotCircle.setAngle(trackCircle.getAngle() + diffAngle);
-            shotCircle.setIndex(trackCircle.getIndex());
-            // 如果加起来是钝角
-            if (cosAngle > Math.PI / 2.0) {
-                cosAngle = Math.PI - cosAngle + Math.PI;
+        if (isInsertBefore) {
+            // 如果会进入下一个轨道
+            if (trackCircle.getAngle() + diffAngle >= Math.PI * 2) {
+                System.out.println("会进入下一个轨道");
+                // 如果跨越了轨道,则加的角度不再是简单的diffAngle,而是另外计算的角(数学问题)
+                double checkAngle = calculateDiffAngle(trackCircle, circleTrackArr[trackCircle.getIndex() == 3 ? 2 : trackCircle.getIndex()]);
+                shotCircle.setIndex(trackCircle.getIndex() + 1);
+                shotCircle.setAngle(diffAngleOnSameTrack[trackCircle.getIndex() == 3 ? 2 : trackCircle.getIndex()] - checkAngle + Math.PI);
+            } else {
+                shotCircle.setAngle(trackCircle.getAngle() + diffAngle);
+                shotCircle.setIndex(trackCircle.getIndex());
             }
-        }
-        
-        // 用三角函数算出x,y
-        double diffX = circleCenterX * Math.cos(cosAngle);
-        shotCircle.setX(circleCenterX - diffX);
-        double diffY = circleCenterY * Math.sin(cosAngle);
-        shotCircle.setY(circleCenterY + diffY);
-        
-        // 给插入的预留空间,将前面的都向前移动
-        if (indexInCircleArr != 0) {
-            for (int i = indexInCircleArr - 1; i >= 0; i--) {
-                if (arr[i].getAngle() + diffAngle >= Math.PI * 2) {
-                    // 校验角度
-                    double cos = calculateDiffAngle(arr[i], circleTrackArr[arr[i].getIndex() == 3 ? 2 : arr[i].getIndex()]);
-                    System.out.println(cos);
-                    arr[i].setAngle(diffAngleOnSameTrack[arr[i].getIndex() == 3 ? 2 : arr[i].getIndex()] - cos + Math.PI);
-                    arr[i].setIndex(arr[i].getIndex() + 1);
-                } else {
-                    arr[i].setAngle(arr[i].getAngle() + diffAngleOnSameTrack[arr[i].getIndex() - 1]);
+            
+            // 给插入的预留空间,将前面的都向前移动(不包括被碰撞的圆)
+            if (indexInCircleArr != 0) {
+                for (int i = indexInCircleArr - 1; i >= 0; i--) {
+                    if (arr[i].getAngle() + diffAngle >= Math.PI * 2) {
+                        // 校验角度
+                        double cos = calculateDiffAngle(arr[i], circleTrackArr[arr[i].getIndex() == 3 ? 2 : arr[i].getIndex()]);
+                        arr[i].setAngle(diffAngleOnSameTrack[arr[i].getIndex() == 3 ? 2 : arr[i].getIndex()] - cos + Math.PI);
+                        arr[i].setIndex(arr[i].getIndex() + 1);
+                    } else {
+                        arr[i].setAngle(arr[i].getAngle() + diffAngleOnSameTrack[arr[i].getIndex() - 1]);
+                    }
                 }
             }
+            // 前插入
+            arr = insertAtIndexBefore(arr, indexInCircleArr, shotCircle);
+        } else {
+            // 默认打中的不是最后一个球
+            shotCircle.setAngle(trackCircle.getAngle());
+            shotCircle.setIndex(trackCircle.getIndex());
+            // 如果打中的是最后一个球,则不会把前面的球向前移动
+            if (indexInCircleArr == arr.length - 1){
+                shotCircle.setAngle(trackCircle.getAngle() - diffAngle);
+                shotCircle.setIndex(trackCircle.getIndex());
+            }
+            
+            // 给插入的预留空间,将前面的都向前移动(包括本身)
+            if (indexInCircleArr != arr.length - 1) {
+                for (int i = indexInCircleArr; i >= 0; i--) {
+                    if (arr[i].getAngle() + diffAngle >= Math.PI * 2) {
+                        // 校验角度
+                        double cos = calculateDiffAngle(arr[i], circleTrackArr[arr[i].getIndex() == 3 ? 2 : arr[i].getIndex()]);
+//                        System.out.println(cos);
+                        arr[i].setAngle(diffAngleOnSameTrack[arr[i].getIndex() == 3 ? 2 : arr[i].getIndex()] - cos + Math.PI);
+                        arr[i].setIndex(arr[i].getIndex() + 1);
+                    } else {
+                        arr[i].setAngle(arr[i].getAngle() + diffAngleOnSameTrack[arr[i].getIndex() - 1]);
+                    }
+                }
+            }
+            // 后插入
+            arr = insertAtIndexAfter(arr, indexInCircleArr, shotCircle);
         }
         
-        // 插入
-        arr = insertAtIndexBefore(arr, indexInCircleArr, shotCircle);
     }
     
     public Circle[] splice(Circle[] arr, int index, int deleteCount) {
@@ -186,7 +215,7 @@ public class Controller {
         Circle[] newArr = new Circle[arr.length + 1];
         System.arraycopy(arr, 0, newArr, 0, index + 1);
         newArr[index + 1] = circle;
-        if (index + 2 < newArr.length) {
+        if (index < arr.length - 1) {
             System.arraycopy(arr, index + 1, newArr, index + 2, arr.length - index - 1);
         }
         return newArr;

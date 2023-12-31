@@ -9,6 +9,7 @@ import java.util.Arrays;
  *@date 2023/12/27 17:54:26
  */
 public class Util {
+    
     // 通过三角形三边,求第三边对应角的弧度
     public static double calculateAngleByThreeSide(double a, double b, double resultAngleMappingSide) {
         double cos = (a * a + b * b - resultAngleMappingSide * resultAngleMappingSide) / (2 * a * b);
@@ -18,10 +19,10 @@ public class Util {
     /**
      * 从数组指定索引中删除指定个数元素, 类似js中splice
      *
-     * @param arr
-     * @param index
-     * @param deleteCount
-     * @return
+     * @param arr         源数组
+     * @param index       开始删除的索引
+     * @param deleteCount 删除的个数
+     * @return 新数组
      */
     public static Circle[] splice(Circle[] arr, int index, int deleteCount) {
         if (index < 0 || index > arr.length - 1 || deleteCount < 0) {
@@ -76,5 +77,20 @@ public class Util {
             System.arraycopy(arr, index + 1, newArr, index + 2, arr.length - index - 1);
         }
         return newArr;
+    }
+    
+    // 如果满足连续三个颜色相同,则删除
+    public static Circle[] tryRemoveSameColorCircle(int index, Circle[] arr) {
+        int left = 1;
+        int right = 1;
+        for (int i = 0; i < arr.length; i++) {
+            if (index - left >= 0 && arr[index - left].getColor().equals(arr[index].getColor())) {
+                left++;
+            }
+            if (index + right < arr.length && arr[index + right].getColor().equals(arr[index].getColor())) {
+                right++;
+            }
+        }
+        return right + left - 1 >= 3 ? Util.splice(arr, index - left + 1, right + left - 1) : arr;
     }
 }

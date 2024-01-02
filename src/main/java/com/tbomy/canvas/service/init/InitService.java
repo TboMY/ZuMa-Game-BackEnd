@@ -9,7 +9,7 @@ import java.util.ArrayList;
 public interface InitService {
     Object[] initTracks();
     
-    Circle[] initCircleArr(int initArrLength);
+    Object[] initCircleArr(String name);
     
     void computeDiffAngleOnSameTrack();
     

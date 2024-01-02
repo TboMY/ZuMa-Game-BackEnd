@@ -28,13 +28,14 @@ public class StopRollbackServiceImpl implements StopRollbackService {
         if (rollbackCircle == null || preCircle == null) {
             return false;
         }
-        
+        // 校准
+        double checkValue = 0.01;
         CircleTrack[] circleTrackArr = initService.getCircleTrackArr();
         Double[] diffAngleOnSameTrack = initService.getDiffAngleOnSameTrack();
         // 如果此时两个球处于同一轨道,且一定处于圆弧轨道,因为都在直线上不会发请求
         if (rollbackCircle.getIndex() == preCircle.getIndex()) {
             double standardValue = diffAngleOnSameTrack[rollbackCircle.getIndex() - 1];
-            return rollbackCircle.getAngle() - preCircle.getAngle() <= standardValue;
+            return rollbackCircle.getAngle() - preCircle.getAngle() - checkValue <= standardValue;
         } else {
             // 如果此时两个球处于不同的轨道
             // 从轨道退到直线
@@ -48,7 +49,7 @@ public class StopRollbackServiceImpl implements StopRollbackService {
                 double distance = Math.sqrt(Math.pow(preCircle.getX() - circleTrackArr[rollbackCircle.getIndex() - 1].getX(), 2)
                         + Math.pow(preCircle.getY() - circleTrackArr[rollbackCircle.getIndex() - 1].getY(), 2));
                 double standardValue = Util.calculateAngleByThreeSide(circleTrackArr[rollbackCircle.getIndex() - 1].getRadius(), distance, 80);
-                return (rollbackCircle.getAngle() - Math.PI) + (2 * Math.PI - preCircle.getAngle()) <= standardValue;
+                return (rollbackCircle.getAngle() - Math.PI) + (2 * Math.PI - preCircle.getAngle()) - checkValue <= standardValue;
             }
         }
     }

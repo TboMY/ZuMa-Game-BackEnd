@@ -16,5 +16,5 @@ public interface UserMapper {
     
     List<User> getListByPage(Integer startLine);
     
-    Integer selectAllCount();
+    Integer getTotalCount();
 }

@@ -4,7 +4,6 @@ import com.tbomy.canvas.mapper.UserMapper;
 import com.tbomy.canvas.param.response.Circle;
 import com.tbomy.canvas.param.response.CircleTrack;
 import com.tbomy.canvas.param.response.InitLine;
-import com.tbomy.canvas.pojo.User;
 import com.tbomy.canvas.service.init.InitService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -12,13 +11,13 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Random;
 
 /*@author cj
  *@date 2023/12/30 23:43:42
  */
 @Service
 public class InitServiceImpl implements InitService {
+    private final UserMapper userMapper;
     // 直线轨道
     private final InitLine initLine;
     // 半圆轨道
@@ -29,7 +28,6 @@ public class InitServiceImpl implements InitService {
     private ArrayList<String> colorList;
     // 每通关一层,颜色加一种
     private final String[] colorArr;
-    private final UserMapper userMapper;
     
     @Autowired
     public InitServiceImpl(UserMapper userMapper) {
@@ -51,7 +49,7 @@ public class InitServiceImpl implements InitService {
     }
     
     @Override
-    public Object[] initCircleArr(String name) {
+    public Circle[] initCircleArr(String name) {
         Integer levelId = userMapper.selectUserByName(name).getLevelId();
         // 颜色
         colorList = new ArrayList<>(List.of("#00c0ff", "#fff900", "#00ff00", "#ff0000"));
@@ -62,9 +60,7 @@ public class InitServiceImpl implements InitService {
             Circle circle = new Circle(400, i * -80, colorList.get((int) (Math.random() * colorList.size())));
             arr[i] = circle;
         }
-        // 加球速
-        double dt = 0.04 + (levelId - 1) * 0.003;
-        return new Object[]{arr, dt};
+        return arr;
     }
     
     // 在相同的圆弧轨道上,每两个圆之间有同的夹角

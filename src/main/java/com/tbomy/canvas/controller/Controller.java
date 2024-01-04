@@ -18,7 +18,6 @@ import com.tbomy.canvas.service.stop.StopRollbackService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Arrays;
 import java.util.List;
 
 @RestController
@@ -41,7 +40,7 @@ public class Controller {
     
     // 轨道上的小球初始数据
     @GetMapping("/initCircleArr")
-    public Object[] initCircleArr(@RequestParam String name) {
+    public Circle[] initCircleArr(@RequestParam String name) {
         return initService.initCircleArr(name);
     }
     
@@ -68,24 +67,28 @@ public class Controller {
         return clearService.clear(clear);
     }
     
+    // 下一关
     @GetMapping("/nextLevel")
     public void nextLevel(@RequestParam String name) {
        nextLevelService.nextLevel(name);
     }
     
+    // 获取第几关
     @GetMapping("/getLevel")
     public Integer getLevel(@RequestParam String name) {
         return achievementService.getLevelId(name);
     }
     
+    // 排行版
     @GetMapping("/getRanking")
     public List<User> getRanking(@RequestParam Integer page) {
         return rankingService.getRanking(page);
     }
     
-    @GetMapping("/getTotalPage")
-    public Integer getTotalPage() {
-        return rankingService.getTotalPage();
+    // 总条数
+    @GetMapping("/getTotalCount")
+    public Integer getTotalCount() {
+        return rankingService.getTotalCount();
     }
     
     @GetMapping("/getPluginCount")

@@ -1,7 +1,6 @@
 package com.tbomy.canvas.controller;
 
 import com.tbomy.canvas.param.request.LoginInfo;
-import com.tbomy.canvas.pojo.User;
 import com.tbomy.canvas.service.login.LoginService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;

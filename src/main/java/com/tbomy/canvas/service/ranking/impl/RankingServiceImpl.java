@@ -21,8 +21,8 @@ public class RankingServiceImpl implements RankingService {
     }
     
     @Override
-    public Integer getTotalPage() {
-        return userMapper.selectAllCount();
+    public Integer getTotalCount() {
+        return userMapper.getTotalCount();
     }
     
     @Autowired

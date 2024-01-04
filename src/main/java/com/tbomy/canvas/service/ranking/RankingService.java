@@ -7,5 +7,5 @@ import java.util.List;
 public interface RankingService {
     List<User> getRanking(Integer page);
     
-    Integer getTotalPage();
+    Integer getTotalCount();
 }

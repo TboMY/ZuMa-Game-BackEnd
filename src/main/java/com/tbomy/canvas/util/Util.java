@@ -17,16 +17,15 @@ public class Util {
     }
     
     /**
-     * 从数组指定索引中删除指定个数元素, 类似js中splice
-     *
+     * 从数组指定索引中删除指定个数元素, js中splice的部分功能
      * @param arr         源数组
      * @param index       开始删除的索引
      * @param deleteCount 删除的个数
      * @return 新数组
      */
     public static Circle[] splice(Circle[] arr, int index, int deleteCount) {
-        if (index < 0 || index > arr.length - 1 || deleteCount < 0) {
-            return null;
+        if (arr == null || index < 0 || index > arr.length - 1 || deleteCount < 0) {
+            throw new RuntimeException("参数错误");
         }
         if (deleteCount >= arr.length - index) {
             return Arrays.copyOfRange(arr, 0, index);
@@ -37,7 +36,13 @@ public class Util {
         return newArr;
     }
     
-    // 在轨道上,判断是往前插还是后插; true:前插, false:后插
+    /**
+     * 在轨道上,判断是往前插还是后插;
+     * @param circleTrackArr 轨道数组
+     * @param trackCircle   轨道上的球
+     * @param shotCircle   射击球
+     * @return true:前插, false:后插
+     */
     public static boolean isInsertBefore(CircleTrack[] circleTrackArr, Circle trackCircle, Circle shotCircle) {
         // 数学结算,计算从轨道端点开始,到射击圆心的夹角
         double y = shotCircle.getY() - circleTrackArr[trackCircle.getIndex() - 1].getY();

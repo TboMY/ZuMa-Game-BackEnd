@@ -113,4 +113,10 @@ public class Controller {
         this.rankingService = rankingService;
         this.pluginService = pluginService;
     }
+    
+    @GetMapping("/test")
+    public int test() {
+        System.out.println(123123);
+        return 1;
+    }
 }

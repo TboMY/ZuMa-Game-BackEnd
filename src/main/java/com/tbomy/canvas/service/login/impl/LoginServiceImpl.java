@@ -31,7 +31,7 @@ public class LoginServiceImpl implements LoginService {
             // 如果有这个用户，如果是新游戏，就把levelId设为1
             if (isNewGame) {
                 userMapper.updateLevelIdByName(name, 1);
-                pluginMapper.updatePluginCountByName(name, 0, 0);
+                pluginMapper.updatePluginCountByName(name, 1, 1);
             }
         }
     }
